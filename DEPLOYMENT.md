@@ -58,7 +58,7 @@ The mixes app reads cover pixels on a canvas to build its colour theme. Covers o
    Expect `200` and `access-control-allow-origin: https://doxxus.ca`.
 4. Optional: add a Cache Rule for `media.doxxus.ca/Covers/*` (Cache eligibility: eligible, Edge TTL: 1 month), or set `Cache-Control` on the objects.
 
-The audio files don't need any change. They use a plain `<audio>` element, which doesn't need CORS.
+The mixes site's own `<audio>` elements don't need CORS. The home page player does, because its visualizer reads the audio through the Web Audio API: the bucket's CORS policy must also allow `https://doxxus.ca` (and `https://www.doxxus.ca` if you serve it) for `Mixes/*`. A CORS policy applies to the whole bucket, so the policy above already covers it.
 
 ### 2. Vercel: deploy the home site
 
@@ -76,7 +76,7 @@ The audio files don't need any change. They use a plain `<audio>` element, which
    - `PORTFOLIO_UPSTREAM` = `https://portfolio-reloaded.vercel.app/portfolio`
    - `MIXES_UPSTREAM` = `https://kairo-mixes.vercel.app`
    - `MIXES_DATA_URL` = `https://raw.githubusercontent.com/Doxxus/KairoMixes/main/src/mixes.json`
-
+   - `MIXES_TRACKLISTS_URL` = `https://raw.githubusercontent.com/Doxxus/KairoMixes/main/src/tracklists.json`
    First check that those two `*.vercel.app` names are the real production domains. Open each project, go to **Settings > Domains**, and set the env vars above if they differ.
 4. Deploy. At this point the home page (`/`) works on the project's `*.vercel.app` URL. `/portfolio` and `/mixes` only work after step 4, because the sub-sites don't have their base paths yet.
 

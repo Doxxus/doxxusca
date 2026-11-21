@@ -14,12 +14,19 @@ export const env = createEnv({
       .url()
       .default("https://portfolio-reloaded.vercel.app/portfolio"),
     MIXES_UPSTREAM: z.string().url().default("https://kairo-mixes.vercel.app"),
-    // JSON listing the mixes; the last entry is shown as the latest mix.
+    // JSON listing the mixes; the entry with the lowest id is shown as the latest mix.
     MIXES_DATA_URL: z
       .string()
       .url()
       .default(
         "https://raw.githubusercontent.com/Doxxus/KairoMixes/main/src/mixes.json",
+      ),
+    // JSON with a tracklist per mix id, shown in the latest mix player.
+    MIXES_TRACKLISTS_URL: z
+      .string()
+      .url()
+      .default(
+        "https://raw.githubusercontent.com/Doxxus/KairoMixes/main/src/tracklists.json",
       ),
   },
 
@@ -41,6 +48,7 @@ export const env = createEnv({
     PORTFOLIO_UPSTREAM: process.env.PORTFOLIO_UPSTREAM,
     MIXES_UPSTREAM: process.env.MIXES_UPSTREAM,
     MIXES_DATA_URL: process.env.MIXES_DATA_URL,
+    MIXES_TRACKLISTS_URL: process.env.MIXES_TRACKLISTS_URL,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
