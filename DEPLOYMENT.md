@@ -42,7 +42,9 @@ The mixes app reads cover pixels on a canvas to build its colour theme. Covers o
      {
        "AllowedOrigins": [
          "https://doxxus.ca",
+         "https://www.doxxus.ca",
          "https://mixes.doxxus.ca",
+         "http://localhost:3000",
          "http://localhost:5173"
        ],
        "AllowedMethods": ["GET", "HEAD"],
@@ -55,7 +57,7 @@ The mixes app reads cover pixels on a canvas to build its colour theme. Covers o
    ```powershell
    curl.exe -I -H "Origin: https://doxxus.ca" https://media.doxxus.ca/Covers/simulacrum.jpg
    ```
-   Expect `200` and `access-control-allow-origin: https://doxxus.ca`.
+   Expect `200` and `access-control-allow-origin: https://doxxus.ca`. Repeat with `https://www.doxxus.ca`: the browser's origin is whichever host Vercel serves the page on, and `doxxus.ca` currently redirects to `www.doxxus.ca`, so the `www` entry is the one that matters.
 4. Optional: add a Cache Rule for `media.doxxus.ca/Covers/*` (Cache eligibility: eligible, Edge TTL: 1 month), or set `Cache-Control` on the objects.
 
 The mixes site's own `<audio>` elements don't need CORS. The home page player does, because its visualizer reads the audio through the Web Audio API: the bucket's CORS policy must also allow `https://doxxus.ca` (and `https://www.doxxus.ca` if you serve it) for `Mixes/*`. A CORS policy applies to the whole bucket, so the policy above already covers it.
@@ -145,7 +147,7 @@ The subdomain redirects are temporary (307) so a mistake can't be cached by brow
 | `/mixes` blank, JS 404s | The mixes branch isn't deployed yet, or `MIXES_UPSTREAM` has a path suffix. It must be the bare origin. |
 | `/portfolio` 404 | The portfolio branch isn't deployed yet, or `PORTFOLIO_UPSTREAM` is missing the `/portfolio` suffix. |
 | Mix covers broken | R2 CORS missing (step 1), or the files aren't under `Covers/`. |
-| Mix covers load, theme stays default | CORS lacks `https://doxxus.ca` in `AllowedOrigins`. |
+| Mix covers load, theme stays default | CORS lacks the page's exact origin in `AllowedOrigins`. Check `https://www.doxxus.ca` as well as `https://doxxus.ca`, then hard-refresh (covers are browser-cached for 4h). |
 | Redirect loop on `/portfolio` or `/mixes` | `PORTFOLIO_UPSTREAM` or `MIXES_UPSTREAM` points at `folio.`/`mixes.doxxus.ca`. Use the `*.vercel.app` URLs. |
 | `401` from the proxy | Deployment Protection on the sub-site's production deployment. |
 | Cert error on `doxxus.ca` | The DNS record is proxied (orange cloud). Set it to DNS only. |
