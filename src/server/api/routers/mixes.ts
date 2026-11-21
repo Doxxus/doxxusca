@@ -32,7 +32,8 @@ export const mixesRouter = createTRPCRouter({
     }
 
     const { mixes } = mixesSchema.parse(await res.json());
-    const latest = mixes.reduce((a, b) => (b.id > a.id ? b : a));
+    // mixes.json numbers newest-first, so the lowest id is the latest mix
+    const latest = mixes.reduce((a, b) => (b.id < a.id ? b : a));
 
     return {
       id: latest.id,
