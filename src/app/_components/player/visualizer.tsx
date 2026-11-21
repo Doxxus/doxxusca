@@ -15,7 +15,15 @@ function sample(data: Uint8Array, bar: number) {
   for (let k = lo; k < hi; k++) sum += data[k] ?? 0;
   const avg = sum / (hi - lo) / 255;
   // Highs carry less energy, so lift them a little
-  return Math.min(1, Math.pow(avg, 1.3) * (1 + (0.9 * bar) / BARS));
+  return Math.min(1, avg * (1 + (0.6 * bar) / BARS));
+}
+
+// Loud, compressed masters sit near full scale in every band, so a bar's absolute level barely moves.
+// Showing how far each bar rises above its own recent average keeps the transients visible.
+function shape(raw: number, baseline: number) {
+  const floor = baseline * 0.95;
+  const contrast = Math.max(0, (raw - floor) / Math.max(0.15, 1 - floor));
+  return Math.pow(Math.min(1, 0.15 * raw * raw + 1.2 * contrast), 1.6);
 }
 
 // Stand-in used when the audio host doesn't allow CORS (the real analyser would read silence).
@@ -37,6 +45,7 @@ type Props = {
 export function Visualizer({ analyser, playing, redrawKey }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const levels = useRef(new Float32Array(BARS));
+  const baselines = useRef(new Float32Array(BARS));
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -81,7 +90,16 @@ export function Visualizer({ analyser, playing, redrawKey }: Props) {
 
       let moving = false;
       for (let i = 0; i < BARS; i++) {
-        const target = !playing ? 0 : data ? sample(data, i) : simulate(now, i);
+        let target = 0;
+        if (playing && data) {
+          const raw = sample(data, i);
+          const baseline = baselines.current[i]! || raw;
+          // Slow average (about a second and a half) that the bar is measured against
+          baselines.current[i] = baseline + (raw - baseline) * 0.02;
+          target = shape(raw, baseline);
+        } else if (playing) {
+          target = simulate(now, i);
+        }
         const current = levels.current[i]!;
         // Rise fast, fall slowly
         const next = current + (target - current) * (target > current ? 0.55 : 0.1);

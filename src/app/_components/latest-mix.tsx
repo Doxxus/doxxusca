@@ -73,6 +73,11 @@ export function LatestMix({ mix }: { mix: Mix }) {
   }, []);
   useEffect(readPalette, [readPalette]);
 
+  // Metadata can arrive before hydration attaches the handlers, so pick up what's already loaded
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio && audio.readyState >= 1 && Number.isFinite(audio.duration)) setDuration(audio.duration);
+  }, []);
   const onCoverError = () => {
     const img = coverRef.current;
     // Retry without CORS so the cover still shows; the palette just stays on the default colours
@@ -125,7 +130,10 @@ export function LatestMix({ mix }: { mix: Mix }) {
       const context = new Context();
       const analyserNode = context.createAnalyser();
       analyserNode.fftSize = 256;
-      analyserNode.smoothingTimeConstant = 0.8;
+      analyserNode.smoothingTimeConstant = 0.7;
+      // The default -30 dB ceiling clips loud masters; a higher ceiling leaves headroom to show dynamics
+      analyserNode.minDecibels = -90;
+      analyserNode.maxDecibels = -10;
       context.createMediaElementSource(audio).connect(analyserNode);
       analyserNode.connect(context.destination);
       graph.current = { context, analyser: analyserNode };
