@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: "Lachlan Campbell",
   handle: "Doxxus",
-  tagline: "Software developer · Drum & bass selector",
+  tagline: "Software architect · Drum & Bass enjoyer",
   url: "https://doxxus.ca",
   links: [
     { label: "GitHub", href: "https://github.com/Doxxus" },
