@@ -31,14 +31,20 @@ export function Tracklist({ tracks, activeIds, open, onSelect }: Props) {
   const firstActive = tracks.find((track) => activeIds.has(track.id))?.id;
 
   // Scrolls the list itself rather than the page, so playback never moves the viewport
+  const wasOpen = useRef(false);
   useEffect(() => {
+    const opening = open && !wasOpen.current;
+    wasOpen.current = open;
     const list = listRef.current;
     if (!open || !list || firstActive === undefined) return;
     const row = list.querySelector<HTMLElement>(`[data-track="${firstActive}"]`);
     if (!row) return;
+    // Jump straight to the track while the panel is still expanding; glide on later track changes
+    const smooth =
+      !opening && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     list.scrollTo({
       top: row.offsetTop - list.clientHeight / 2 + row.clientHeight / 2,
-      behavior: "smooth",
+      behavior: smooth ? "smooth" : "instant",
     });
   }, [open, firstActive]);
 
@@ -50,7 +56,7 @@ export function Tracklist({ tracks, activeIds, open, onSelect }: Props) {
       inert={!open}
     >
       <div className="overflow-hidden">
-        <ol ref={listRef} className="relative mt-3 max-h-72 space-y-1 overflow-y-auto pr-1">
+        <ol ref={listRef} className="tracklist relative mt-3 max-h-72 space-y-1 overflow-y-auto pr-2">
           {tracks.map((track, index) => (
             <li key={track.id} data-track={track.id}>
               <button

@@ -30,6 +30,7 @@ type Mix = {
 
 // The mixes site stores its own state under "kairo_playback" and "theme" on this same origin, so this key must stay distinct.
 const VOLUME_KEY = "doxxus_home_player_volume";
+const THEMED_KEY = "doxxus_home_player_cover_colours";
 const SKIP_SECONDS = 10;
 const SEEK_SECONDS = 5;
 const VOLUME_STEP = 0.05;
@@ -60,6 +61,27 @@ export function LatestMix({ mix }: { mix: Mix }) {
   const [palette, setPalette] = useState<Palette | null>(null);
   const [tracklistOpen, setTracklistOpen] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [coverColours, setCoverColours] = useState(true);
+  const [skipSpin, setSkipSpin] = useState({ back: 0, forward: 0 });
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(THEMED_KEY) === "off") setCoverColours(false);
+    } catch {
+      /* storage unavailable */
+    }
+  }, []);
+  const toggleCoverColours = () => {
+    const next = !coverColours;
+    setCoverColours(next);
+    try {
+      localStorage.setItem(THEMED_KEY, next ? "on" : "off");
+    } catch {
+      /* storage unavailable */
+    }
+  };
+  // With cover colours off the palette is dropped, so the registered CSS properties ease back to the defaults
+  const activePalette = coverColours ? palette : null;
 
   const playingRef = useRef(false);
   useEffect(() => {
@@ -261,7 +283,7 @@ export function LatestMix({ mix }: { mix: Mix }) {
       aria-labelledby="latest-mix"
       className="card player p-5 sm:p-6"
       data-playing={playing || undefined}
-      style={paletteStyle(palette)}
+      style={paletteStyle(activePalette)}
     >
       <div className="flex items-center justify-between gap-4">
         <h2
@@ -270,13 +292,25 @@ export function LatestMix({ mix }: { mix: Mix }) {
         >
           Latest mix
         </h2>
-        <p className="hidden text-xs text-gray-500 sm:block dark:text-gray-400">
-          Space play · ← → seek · ↑ ↓ volume · M mute
-        </p>
+        <div className="flex items-center gap-4">
+          <p className="hidden text-xs text-gray-500 lg:block dark:text-gray-400">
+            Space play · ← → seek · ↑ ↓ volume · M mute
+          </p>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={coverColours}
+            onClick={toggleCoverColours}
+            className="player-switch"
+          >
+            Cover colours
+            <span className="player-switch-track" aria-hidden />
+          </button>
+        </div>
       </div>
 
       <div className="mt-4 flex flex-col gap-6 sm:flex-row">
-        <div className="player-cover shrink-0 self-center sm:self-start">
+        <div className="player-cover relative shrink-0 self-center sm:self-start">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             ref={coverRef}
@@ -285,7 +319,7 @@ export function LatestMix({ mix }: { mix: Mix }) {
             crossOrigin="anonymous"
             onLoad={readPalette}
             onError={onCoverError}
-            className="relative size-52 rounded-xl object-cover shadow-xl sm:size-48"
+            className="relative size-52 rounded-xl object-cover shadow-xl sm:size-[18.65rem]"
           />
         </div>
 
@@ -312,7 +346,7 @@ export function LatestMix({ mix }: { mix: Mix }) {
             <Visualizer
               analyser={analyser}
               playing={playing}
-              redrawKey={`${resolvedTheme}-${palette?.h1}-${palette?.h2}`}
+              redrawKey={`${resolvedTheme}-${activePalette?.h1}-${activePalette?.h2}`}
             />
           </div>
 
@@ -334,15 +368,18 @@ export function LatestMix({ mix }: { mix: Mix }) {
             <span className="w-12">{formatTime(duration)}</span>
           </div>
 
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+          <div className="mt-3 flex flex-col items-center gap-2 sm:flex-row sm:justify-between sm:gap-4">
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 className="player-btn"
                 aria-label={`Back ${SKIP_SECONDS} seconds`}
-                onClick={() => seekBy(-SKIP_SECONDS)}
+                onClick={() => {
+                  seekBy(-SKIP_SECONDS);
+                  setSkipSpin((s) => ({ ...s, back: s.back + 1 }));
+                }}
               >
-                <SkipIcon direction="back" />
+                <SkipIcon direction="back" spin={skipSpin.back} />
               </button>
               <button
                 ref={playButtonRef}
@@ -357,14 +394,17 @@ export function LatestMix({ mix }: { mix: Mix }) {
                 type="button"
                 className="player-btn"
                 aria-label={`Forward ${SKIP_SECONDS} seconds`}
-                onClick={() => seekBy(SKIP_SECONDS)}
+                onClick={() => {
+                  seekBy(SKIP_SECONDS);
+                  setSkipSpin((s) => ({ ...s, forward: s.forward + 1 }));
+                }}
               >
-                <SkipIcon direction="forward" />
+                <SkipIcon direction="forward" spin={skipSpin.forward} />
               </button>
             </div>
 
             {canSetVolume && (
-              <div className="flex items-center gap-1">
+              <div className="flex w-48 max-w-full items-center gap-1 sm:w-40">
                 <button
                   type="button"
                   className="player-btn"
@@ -375,7 +415,7 @@ export function LatestMix({ mix }: { mix: Mix }) {
                 </button>
                 <input
                   type="range"
-                  className="player-range w-28"
+                  className="player-range"
                   aria-label="Volume"
                   min={0}
                   max={1}

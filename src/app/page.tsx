@@ -33,6 +33,22 @@ export default async function Home() {
           </p>
         </section>
 
+        {siteConfig.about.length > 0 && (
+          <section aria-labelledby="about" className="-mt-4">
+            <h2
+              id="about"
+              className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400"
+            >
+              About
+            </h2>
+            <div className="mt-3 max-w-2xl space-y-3 text-gray-700 dark:text-gray-300">
+              {siteConfig.about.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
+          </section>
+        )}
+
         <section aria-label="Pages" className="grid gap-4 sm:grid-cols-2">
           {pages.map((page) => (
             // Plain anchors: these paths are proxied to other projects, so client-side routing must not handle them

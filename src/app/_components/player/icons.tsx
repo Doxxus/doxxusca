@@ -105,7 +105,14 @@ export function VolumeIcon({ level, muted }: { level: number; muted: boolean }) 
   );
 }
 
-export function SkipIcon({ direction }: { direction: "back" | "forward" }) {
+export function SkipIcon({
+  direction,
+  spin = 0,
+}: {
+  direction: "back" | "forward";
+  // Bumped on every click; changing the key replays the arrow's spin
+  spin?: number;
+}) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -118,8 +125,10 @@ export function SkipIcon({ direction }: { direction: "back" | "forward" }) {
       strokeLinejoin="round"
     >
       <g transform={direction === "forward" ? "translate(24 0) scale(-1 1)" : undefined}>
-        <path d="M12 7a6.5 6.5 0 1 1-6.5 6.5" />
-        <path d="M14.5 4.5L11.5 7l3 2.5" />
+        <g key={spin} className={spin > 0 ? "skip-arc" : undefined}>
+          <path d="M12 7a6.5 6.5 0 1 1-6.5 6.5" />
+          <path d="M14.5 4.5L11.5 7l3 2.5" />
+        </g>
       </g>
       <text
         x="12"

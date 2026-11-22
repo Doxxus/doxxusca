@@ -1,8 +1,12 @@
 export const siteConfig = {
   name: "Lachlan Campbell",
   handle: "Doxxus",
-  tagline: "Software architect · Drum & Bass enjoyer",
+  tagline: "Software architect · Drum & Bass enjoyer · Technological Tinkerer",
   url: "https://doxxus.ca",
+  // Each string is rendered as its own paragraph in the About section on the home page
+  about: [
+    "Hi! Welcome to my personal site. A place where I can share some cool stuff I've made. Feel free to explore my projects, mixes, and more.",
+  ],
   links: [
     { label: "GitHub", href: "https://github.com/Doxxus" },
     {

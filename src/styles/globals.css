@@ -35,6 +35,67 @@ body {
   @apply border-gray-800 bg-gray-900/60;
 }
 
+/* ---- Theme toggle ---- */
+
+.theme-pill {
+  position: relative;
+  width: 3.5rem;
+  height: 1.875rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background-color: var(--color-sky-200);
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.15);
+}
+
+.dark .theme-pill {
+  background-color: var(--color-indigo-950);
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.5);
+}
+
+.theme-pill[data-ready] {
+  transition: background-color 0.5s ease;
+}
+
+.theme-pill-knob {
+  position: absolute;
+  top: 0.1875rem;
+  left: 0.1875rem;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  background-color: white;
+  color: var(--color-amber-500);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+}
+
+.theme-pill[data-ready] .theme-pill-knob {
+  transition:
+    transform 0.5s cubic-bezier(0.5, 0, 0.2, 1.3),
+    background-color 0.5s ease,
+    color 0.5s ease;
+}
+
+.theme-pill[data-dark] .theme-pill-knob {
+  transform: translateX(1.625rem);
+  background-color: var(--color-slate-200);
+  color: var(--color-indigo-900);
+}
+
+.theme-pill:active .theme-pill-knob {
+  width: 1.75rem;
+}
+
+.theme-pill[data-dark]:active .theme-pill-knob {
+  transform: translateX(1.375rem);
+}
+
+.theme-pill:focus-visible {
+  outline: 2px solid var(--color-violet-500);
+  outline-offset: 2px;
+}
+
 /* ---- Latest-mix player ---- */
 
 /* Registered so the cover palette can transition smoothly when it is first read. */
@@ -125,12 +186,66 @@ body {
 @keyframes track-in {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(5px);
   }
 }
 
 .now-playing-track {
-  animation: track-in 0.4s ease-out;
+  animation: track-in 0.35s ease-out both;
+}
+
+/* One full turn of the skip arrow; the forward icon is mirrored so the same keyframes spin it the other way */
+.skip-arc {
+  transform-origin: 12px 13.5px;
+  animation: skip-spin 0.5s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+
+@keyframes skip-spin {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.player-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-gray-500);
+}
+
+.dark .player-switch {
+  color: var(--color-gray-400);
+}
+
+.player-switch-track {
+  position: relative;
+  width: 2rem;
+  height: 1.125rem;
+  border-radius: 9999px;
+  background-color: color-mix(in srgb, var(--color-gray-500) 35%, transparent);
+  transition: background-image 0.3s ease, background-color 0.3s ease;
+}
+
+.player-switch-track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(1.125rem - 4px);
+  height: calc(1.125rem - 4px);
+  border-radius: 9999px;
+  background: white;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  transition: transform 0.25s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.player-switch[aria-checked="true"] .player-switch-track {
+  background-image: linear-gradient(135deg, var(--accent), var(--accent-2));
+}
+
+.player-switch[aria-checked="true"] .player-switch-track::after {
+  transform: translateX(0.875rem);
 }
 
 .player-btn {
@@ -230,7 +345,32 @@ body {
   background-color: color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
+.tracklist {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 45%, transparent) transparent;
+}
+
+.tracklist::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tracklist::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tracklist::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.tracklist::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
 .track-row {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: flex;
   width: 100%;
   align-items: center;
@@ -245,9 +385,22 @@ body {
   background-color: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
-.track-row[data-active] {
+/* Highlight that sweeps in from the left when the track starts and back out when it stops */
+.track-row::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
   background-color: color-mix(in srgb, var(--accent) 20%, transparent);
   box-shadow: inset 3px 0 0 var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.track-row[data-active]::before {
+  transform: scaleX(1);
 }
 
 /* Range inputs: --fill (set inline) is the filled percentage */
@@ -323,7 +476,17 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .player[data-playing] .player-cover::before,
   .player[data-playing] .play-btn::after,
-  .now-playing-track {
+  .now-playing-track,
+  .skip-arc {
     animation: none;
+  }
+
+  .theme-pill,
+  .theme-pill-knob {
+    transition: none !important;
+  }
+
+  .track-row::before {
+    transition: none;
   }
 }
